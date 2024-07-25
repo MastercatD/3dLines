@@ -1,28 +1,15 @@
 ﻿
 #include "framework.h"
 #include "3dLines.h"
-@include "Segment3D.h"
+#include "Segment3D.h"
+
 
 #define MAX_LOADSTRING 100
 
-enum Axis {
-  xAxis = 0,
-  yAxis = 1,
-  zAxis = 2
-};
-
-class Vector3D
-{
-  double X;
-  double Y;
-  double Z;
-
-};
-
-class Segment3D
-{
-  Vector3D start;
-  Vector3D end;
+enum class Axis {
+  x = 0,
+  y = 1,
+  z = 2
 };
 
 
@@ -37,24 +24,34 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-/*
-void DrawLine(Segment3D line, HDC hDc, Axis axis) {
+
+void DrawLine(Segment3D *line, HDC hDc, Axis axis) {
   int x1, y1, x2, y2;
+  
   switch (axis) {
-    case xAxis:
-      x1 = line.start
+    case Axis::x:
+      x1 = line->GetStart()->GetZ();
+      y1 = line->GetStart()->GetZ();
+      x2 = line->GetEnd()->GetY();
+      y2 = line->GetEnd()->GetY();
       break;
-    case yAxis:
-
+    case Axis::y:
+      x1 = line->GetStart()->GetX();
+      y1 = line->GetStart()->GetX();
+      x2 = line->GetEnd()->GetZ();
+      y2 = line->GetEnd()->GetZ();
       break;
-    case zAxis:
-
+    case Axis::z:
+      x1 = line->GetStart()->GetX();
+      y1 = line->GetStart()->GetX();
+      x2 = line->GetEnd()->GetY();
+      y2 = line->GetEnd()->GetY();
       break;
   }
-  MoveToEx(hDc, x1, y1, NULL); //сделать текущими координаты x1, y1
-  LineTo(hdc, x2, y2);
+  MoveToEx(hDc, x1, y1, NULL); 
+  LineTo(hDc, x2, y2);
 }
-*/
+
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
