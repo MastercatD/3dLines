@@ -142,10 +142,14 @@
     <ClInclude Include="3dLines.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="Segment3D.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Vector3D.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="3dLines.cpp" />
+    <ClCompile Include="Segment3D.cpp" />
+    <ClCompile Include="Vector3D.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="3dLines.rc" />

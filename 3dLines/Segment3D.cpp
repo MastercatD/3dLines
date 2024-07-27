@@ -1,15 +1,21 @@
 #include "Segment3D.h"
 
-Segment3D::Segment3D(Vector3D* start, Vector3D* end) {
-	this->start = *start;
-	this->end = *end;
+Segment3D::Segment3D() {
+	this->start = Vector3D(0, 0, 0);
+	this->end = Vector3D(0, 0, 0);
+}
+
+
+Segment3D::Segment3D(Vector3D start, Vector3D end) {
+	this->start = start;
+	this->end = end;
 }
 
 void Segment3D::SetStart(Vector3D start) {
 	this->start = start;
 }
 
-void Segment3D::SetEnd(Vector3D start) {
+void Segment3D::SetEnd(Vector3D end) {
 	this->end = end;
 }
 
