@@ -19,12 +19,12 @@ void Segment3D::SetEnd(Vector3D end) {
 	this->end = end;
 }
 
-Vector3D* Segment3D::GetStart() {
-	return &start;
+Vector3D Segment3D::GetStart() {
+	return start;
 }
 
-Vector3D* Segment3D::GetEnd() {
-	return &end;
+Vector3D Segment3D::GetEnd() {
+	return end;
 }
 
 bool Segment3D::InSegment(double x, double y, double z) {
@@ -55,3 +55,4 @@ bool Segment3D::InSegment(double x, double y, double z) {
 	}
 	return (x >= x0 && x <= x1 && y >= y0 && y <= y1 && z >= z0 && z <= z1);
 }
+

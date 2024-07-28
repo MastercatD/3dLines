@@ -1,0 +1,10 @@
+﻿  3dLines.cpp
+C:\Users\lenik\Desktop\Новая папка (2)\3dLines\3dLines\3dLines.cpp(108,28): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+C:\Users\lenik\Desktop\Новая папка (2)\3dLines\3dLines\3dLines.cpp(109,28): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+C:\Users\lenik\Desktop\Новая папка (2)\3dLines\3dLines\3dLines.cpp(112,28): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+C:\Users\lenik\Desktop\Новая папка (2)\3dLines\3dLines\3dLines.cpp(113,28): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+C:\Users\lenik\Desktop\Новая папка (2)\3dLines\3dLines\3dLines.cpp(116,28): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+C:\Users\lenik\Desktop\Новая папка (2)\3dLines\3dLines\3dLines.cpp(117,28): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+C:\Users\lenik\Desktop\Новая папка (2)\3dLines\3dLines\3dLines.cpp(154,1): warning C4312: приведение типов: преобразование из "int" в "HMENU" большего размера
+C:\Users\lenik\Desktop\Новая папка (2)\3dLines\3dLines\3dLines.cpp(166,1): warning C4312: приведение типов: преобразование из "int" в "HMENU" большего размера
+  3dLines.vcxproj -> C:\Users\lenik\Desktop\Новая папка (2)\3dLines\x64\Debug\3dLines.exe

@@ -9,21 +9,10 @@
 #define BUTTON_Y 2
 #define BUTTON_Z 3
 #define LINE_BUTTON_1 4
-#define LINE_BUTTON_2 17
+#define LINE_BUTTON_2 5
+#define COMPUTE_BUTTON 6
 
-#define EDIT_X_11 5
-#define EDIT_X_12 6
-#define EDIT_Y_11 7
-#define EDIT_Y_12 8
-#define EDIT_Z_11 9
-#define EDIT_Z_12 10
 
-#define EDIT_X_21 11
-#define EDIT_X_22 12
-#define EDIT_Y_21 13
-#define EDIT_Y_22 14
-#define EDIT_Z_21 15
-#define EDIT_Z_22 16
 
 enum class Axis {
   x = 0,
@@ -36,9 +25,10 @@ enum class Axis {
 HINSTANCE hInst;                                // текущий экземпляр
 WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
-bool draw1 = false, draw2 = false;
+bool draw1 = false, draw2 = false, drawPoint = false;
 Axis axis = Axis::x;
-Segment3D line1, line2;
+Segment3D line1, line2; // Отрезок 1 и отрезок 2
+Vector3D point; //  Точка пересечения
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -48,31 +38,95 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 
 
-void DrawLine(Segment3D line, HDC hDc, Axis axis) {
-  int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-  
+// Функция поиска точки пересечения отрезков
+bool Interseсt(Segment3D segment1, Segment3D segment2, Vector3D &pointDestination) {
+
+  double eps = 10e-10;
+  bool result = false;
+  //Точки и векторы, лежащие на прямых для составления уравнений прямой в параметрическом виде
+  double x01 = segment1.GetStart().GetX(), x02 = segment2.GetStart().GetX();
+  double vectorX1 = (segment1.GetEnd().GetX() - x01),
+         vectorX2 = (segment2.GetEnd().GetX() - x02);
+
+  double y01 = segment1.GetStart().GetY(), y02 = segment2.GetStart().GetY();
+  double vectorY1 = (segment1.GetEnd().GetY() - y01),
+         vectorY2 = (segment2.GetEnd().GetY() - y02);
+
+  double z01 = segment1.GetStart().GetZ(), z02 = segment2.GetStart().GetZ();
+  double vectorZ1 = (segment1.GetEnd().GetZ() - z01),
+         vectorZ2 = (segment2.GetEnd().GetZ() - z02);
+
+
+  //Находим пересечение путём выражения параметров s и t из уравнений прямых в
+  //параметрическом виде
+  double s;
+  double t;
+
+  double divisor, dividend;
+  // Решение системы уравнений
+  divisor = ((x01 - x02) * vectorY1 + (y02 - y01) * vectorX1);
+  dividend = (vectorY1 * vectorX2 - vectorX1 * vectorY2);
+  if (dividend == 0) {
+    // Решение системы уравнений выделением t через Y
+    divisor = ((y01 - y02) * vectorZ1 + (z02 - z01) * vectorY1);
+    dividend = (vectorZ1 * vectorY2 - vectorY1 * vectorZ2);
+    s = divisor / dividend;
+    t = (vectorY2 * s + y02 - y01) / vectorY1;
+  } else {
+    // Решение системы уравнений выделением t через X
+    s = divisor / dividend;
+    t = (vectorX2 * s + x02 - x01) / vectorX1;
+  }
+
+  double x = vectorX2 * s + x02;
+  double y = vectorY2 * s + y02;
+  double z = vectorZ2 * s + z02;
+  if (abs(x - (vectorX1 * t + x01)) < eps &&
+      abs(y - (vectorY1 * t + y01)) < eps &&
+      abs(z - (vectorZ1 * t + z01)) <
+          eps  //Если система решена неправильно, то прямые не пересекаются
+      && segment1.InSegment(x, y, z) &&
+      segment2.InSegment(
+          x, y, z)) {  //Проверка, чтобы точка лежала в пределах обоих отрезков на прямой
+    pointDestination = Vector3D(x, y, z);
+    result = true;
+  }
+ 
+  return result;
+}
+
+
+void GetCoordinates(Vector3D p, HDC hDc, Axis axis, int &xDestination, int &yDestination) {
   switch (axis) {
     case Axis::x:
-      x1 = line.GetStart()->GetZ();
-      y1 = line.GetStart()->GetZ();
-      x2 = line.GetEnd()->GetY();
-      y2 = line.GetEnd()->GetY();
+      xDestination = p.GetZ();
+      yDestination = p.GetY();
       break;
     case Axis::y:
-      x1 = line.GetStart()->GetX();
-      y1 = line.GetStart()->GetX();
-      x2 = line.GetEnd()->GetZ();
-      y2 = line.GetEnd()->GetZ();
+      xDestination = p.GetX();
+      yDestination = p.GetZ();
       break;
     case Axis::z:
-      x1 = line.GetStart()->GetX();
-      y1 = line.GetStart()->GetX();
-      x2 = line.GetEnd()->GetY();
-      y2 = line.GetEnd()->GetY();
+      xDestination = p.GetX();
+      yDestination = p.GetY();
       break;
   }
+}
+
+void DrawLine(Segment3D line, HDC hDc, Axis axis) {
+  int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+  GetCoordinates(line.GetStart(), hDc, axis, x1, y1);
+  GetCoordinates(line.GetEnd(), hDc, axis, x2, y2);
   MoveToEx(hDc, 675 + x1, 265 - y1, NULL); 
   LineTo(hDc, 675 + x2, 265 - y2);
+}
+
+void DrawPoint(Vector3D p, HDC hDc, Axis axis) {
+  int x = 0, y = 0;
+  GetCoordinates(p, hDc, axis, x, y);
+  HBRUSH hBrush = CreateSolidBrush(RGB(10, 200, 100));
+  SelectObject(hDc, hBrush);
+  Ellipse(hDc, 670 + x, 260 - y, 680 + x, 270 - y);
 }
 
 HWND CreateText(HWND hWnd, const wchar_t text[255], int x, int y) {
@@ -86,7 +140,7 @@ HWND CreateText(HWND hWnd, const wchar_t text[255], int x, int y) {
 }
 
 HWND CreateEdit(HWND hWnd, HINSTANCE hInstance, int x, int y, int idEdit) {
-  HWND hEdit = CreateWindow(L"EDIT", L"", 
+  HWND hEdit = CreateWindow(L"EDIT", L"300", 
     WS_BORDER | WS_CHILD | WS_VISIBLE, 
     x, y, 
     60, 20, 
@@ -216,7 +270,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-     CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+     CW_USEDEFAULT, 0, 1150, 600, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -235,22 +289,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    CreatePanel(hWnd, hInstance, 20, 285, 20);
    CreateButton(hWnd, hInstance, L"Отрезок 2", 20, 390, LINE_BUTTON_2);
+
+   CreateButton(hWnd, hInstance, L"Расчитать", 20, 430, COMPUTE_BUTTON);
    
    return TRUE;
 
 
 }
 
-//
-//  ФУНКЦИЯ: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  ЦЕЛЬ: Обрабатывает сообщения в главном окне.
-//
-//  WM_COMMAND  - обработать меню приложения
-//  WM_PAINT    - Отрисовка главного окна
-//  WM_DESTROY  - отправить сообщение о выходе и вернуться
-//
-//
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -264,11 +310,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       case LINE_BUTTON_1:
         line1 = CheckPanel(hWnd, hInst, 10);
         draw1 = true;
+        drawPoint = false;
         InvalidateRect(hWnd, NULL, NULL);//обновляем окно
         break;
       case LINE_BUTTON_2:
         line2 = CheckPanel(hWnd, hInst, 20);
         draw2 = true;
+        drawPoint = false;
         InvalidateRect(hWnd, NULL, NULL);//обновляем окно
         break;
       case BUTTON_X:
@@ -281,6 +329,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
       case BUTTON_Z:
         axis = Axis::z;
+        InvalidateRect(hWnd, NULL, NULL);
+        break;
+      case COMPUTE_BUTTON:
+        drawPoint = Interseсt(line1, line2, point);
         InvalidateRect(hWnd, NULL, NULL);
         break;
       case IDM_ABOUT:
@@ -309,15 +361,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (draw2) {
               DrawLine(line2, hdc, axis);
             }
-
-            //675
-            // 265
-            //hdc = BeginPaint(hWnd, &ps);
-            //здесь можно вставить какие-нибудь функции рисования
-            //DrawLine()
-              //обновляем окно
-            //ValidateRect(hWnd, NULL);
-            //заканчиваем рисовать
+            if (drawPoint) {
+              DrawPoint(point, hdc, axis);
+            }
             EndPaint(hWnd, &ps);
         }
         break;
