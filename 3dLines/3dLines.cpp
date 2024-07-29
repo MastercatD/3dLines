@@ -26,9 +26,10 @@ HINSTANCE hInst;                                // текущий экземпл
 WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
 bool draw1 = false, draw2 = false, drawPoint = false;
-Axis axis = Axis::x;
+Axis axis = Axis::z;
 Segment3D line1, line2; // Отрезок 1 и отрезок 2
 Vector3D point; //  Точка пересечения
+RECT rect{ 250, 20, 1100, 510 };
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -64,16 +65,28 @@ bool Interseсt(Segment3D segment1, Segment3D segment2, Vector3D &pointDestinati
 
   double divisor, dividend;
   // Решение системы уравнений
-  divisor = ((x01 - x02) * vectorY1 + (y02 - y01) * vectorX1);
+ 
   dividend = (vectorY1 * vectorX2 - vectorX1 * vectorY2);
   if (dividend == 0) {
-    // Решение системы уравнений выделением t через Y
-    divisor = ((y01 - y02) * vectorZ1 + (z02 - z01) * vectorY1);
+
     dividend = (vectorZ1 * vectorY2 - vectorY1 * vectorZ2);
-    s = divisor / dividend;
-    t = (vectorY2 * s + y02 - y01) / vectorY1;
+    if (dividend == 0) {
+      // Решение системы уравнений выделением t через Z
+      divisor = ((z01 - z02) * vectorX1 + (x02 - x01) * vectorZ1);
+      dividend = (vectorX1 * vectorZ2 - vectorZ1 * vectorX2);
+      s = divisor / dividend;
+      t = (vectorZ2 * s + z02 - z01) / vectorZ1;
+    }
+    else {
+      // Решение системы уравнений выделением t через Y
+      divisor = ((y01 - y02) * vectorZ1 + (z02 - z01) * vectorY1);
+      s = divisor / dividend;
+      t = (vectorY2 * s + y02 - y01) / vectorY1;
+    }
+
   } else {
     // Решение системы уравнений выделением t через X
+    divisor = ((x01 - x02) * vectorY1 + (y02 - y01) * vectorX1);
     s = divisor / dividend;
     t = (vectorX2 * s + x02 - x01) / vectorX1;
   }
@@ -133,7 +146,7 @@ HWND CreateText(HWND hWnd, const wchar_t text[255], int x, int y) {
   HWND hText = CreateWindow(TEXT("EDIT"), text, 
     WS_CHILD | WS_VISIBLE, 
     x, y, 
-    20, 20, 
+    30, 20, 
     hWnd, 0, 
     0, 0);
   return hText;
@@ -291,6 +304,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    CreateButton(hWnd, hInstance, L"Отрезок 2", 20, 390, LINE_BUTTON_2);
 
    CreateButton(hWnd, hInstance, L"Расчитать", 20, 430, COMPUTE_BUTTON);
+
+   CreateText(hWnd, L"245", 680, 0);
+   CreateText(hWnd, L"-245", 680, 510);
+
+   CreateText(hWnd, L"-425", 220, 255);
+   CreateText(hWnd, L"425", 1100, 255);
    
    return TRUE;
 
@@ -311,29 +330,40 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         line1 = CheckPanel(hWnd, hInst, 10);
         draw1 = true;
         drawPoint = false;
-        InvalidateRect(hWnd, NULL, NULL);//обновляем окно
+        InvalidateRect(hWnd, &rect, NULL);//обновляем окно
         break;
       case LINE_BUTTON_2:
         line2 = CheckPanel(hWnd, hInst, 20);
         draw2 = true;
         drawPoint = false;
-        InvalidateRect(hWnd, NULL, NULL);//обновляем окно
+        InvalidateRect(hWnd, &rect, NULL);//обновляем окно
         break;
       case BUTTON_X:
         axis = Axis::x;
-        InvalidateRect(hWnd, NULL, NULL);
+        InvalidateRect(hWnd, &rect, NULL);
         break;
       case BUTTON_Y:
         axis = Axis::y;
-        InvalidateRect(hWnd, NULL, NULL);
+        InvalidateRect(hWnd, &rect, NULL);
         break;
       case BUTTON_Z:
         axis = Axis::z;
-        InvalidateRect(hWnd, NULL, NULL);
+        InvalidateRect(hWnd, &rect, NULL);
         break;
       case COMPUTE_BUTTON:
         drawPoint = Interseсt(line1, line2, point);
-        InvalidateRect(hWnd, NULL, NULL);
+        if (drawPoint) {
+          wchar_t message[100], buffer2[100], buffer3[100]; // Массив для хранения строки
+
+          // Преобразование double в wchar_t с использованием swprintf
+          swprintf(message, sizeof(message) / sizeof(message[0]), L"Точка пересечения (%.5f: %.5f: %.5f)", point.GetX(), point.GetY(), point.GetZ());
+
+          ::MessageBox(hWnd, message, L"Уведомление", MB_OK);
+        }
+        else {
+          ::MessageBox(hWnd, L"Прямые не пересекаются на указанных отрезках", L"Уведомление", MB_OK);
+        }
+        InvalidateRect(hWnd, &rect, NULL);
         break;
       case IDM_ABOUT:
         DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
